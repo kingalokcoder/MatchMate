@@ -15,34 +15,25 @@ struct ContentView: View {
         NavigationView {
             ZStack {
                 if viewModel.isLoading {
-                    ProgressView()
+                    LoadingView()
                 } else if let error = viewModel.error {
-                    VStack {
-                        Text("Error loading profiles")
-                            .foregroundColor(.red)
-                        Button("Retry") {
-                            viewModel.fetchProfiles()
-                        }
+                    ErrorView(error: error) {
+                        viewModel.fetchProfiles()
                     }
-                } else if viewModel.profileCards.isEmpty {
-                    Text("No more profiles")
-                        .foregroundColor(.gray)
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(viewModel.profileCards) { profileCard in
-                                ProfileCardView(
-                                    profileCard: profileCard,
-                                    onAccept: { viewModel.acceptProfile(profileCard) },
-                                    onDecline: { viewModel.declineProfile(profileCard) }
-                                )
-                            }
-                        }
-                        .padding()
-                    }
+                    ProfileListView(viewModel: viewModel)
                 }
             }
             .navigationTitle("Profile Matches")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        viewModel.fetchProfiles()
+                    }) {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+            }
         }
         .onAppear {
             viewModel.fetchProfiles()
