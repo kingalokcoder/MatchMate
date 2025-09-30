@@ -6,16 +6,53 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct ContentView: View {
+    @Environment(\.managedObjectContext) private var viewContext
+    @StateObject private var viewModel: ProfileViewModel
+    
+    init(context: NSManagedObjectContext? = nil) {
+        let context = context ?? PersistenceController.shared.container.viewContext
+        _viewModel = StateObject(wrappedValue: ProfileViewModel(context: context))
+    }
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationView {
+            ZStack {
+                if viewModel.isLoading {
+                    ProgressView()
+                } else if let error = viewModel.error {
+                    VStack {
+                        Text("Error loading profiles")
+                            .foregroundColor(.red)
+                        Button("Retry") {
+                            viewModel.fetchProfiles()
+                        }
+                    }
+                } else if viewModel.profiles.isEmpty {
+                    Text("No more profiles")
+                        .foregroundColor(.gray)
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            ForEach(viewModel.profiles) { profile in
+                                ProfileCardView(
+                                    profile: profile,
+                                    onAccept: { viewModel.acceptProfile(profile) },
+                                    onDecline: { viewModel.declineProfile(profile) }
+                                )
+                            }
+                        }
+                        .padding()
+                    }
+                }
+            }
+            .navigationTitle("Profile Matches")
         }
-        .padding()
+        .onAppear {
+            viewModel.fetchProfiles()
+        }
     }
 }
 
