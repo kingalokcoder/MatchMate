@@ -58,11 +58,11 @@ struct EmptyStateView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
             
-            Text("No More Profiles")
+            Text(LocalizedStringKey("No More Profiles"))
                 .font(.title2)
                 .fontWeight(.medium)
             
-            Text("Check back later for new matches!")
+            Text(LocalizedStringKey("Check back later for new matches!"))
                 .foregroundColor(.gray)
         }
     }

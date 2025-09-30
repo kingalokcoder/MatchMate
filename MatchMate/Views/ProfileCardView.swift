@@ -13,7 +13,7 @@ struct ProfileCardView: View {
             return .green
         case .declined:
             return .red
-        case .none:
+        case .all:
             return .white
         }
     }
@@ -37,7 +37,7 @@ struct ProfileCardView: View {
                     .padding()
                     .background(Color.red.opacity(0.8))
                     .rotationEffect(.degrees(-30))
-            case .none:
+            case .all:
                 EmptyView()
             }
         }
@@ -53,44 +53,48 @@ struct ProfileCardView: View {
                 Rectangle()
                     .foregroundColor(.gray.opacity(0.3))
             }
-            .frame(height: 300)
+            .frame(height: 400)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(statusOverlay)
             
             VStack(alignment: .leading, spacing: 8) {
-                Text(profileCard.profile.fullName)
+                Text(profileCard.profile.name.first + " " + profileCard.profile.name.last)
                     .font(.title2)
                     .fontWeight(.bold)
                 
                 HStack {
-                    Text("\(profileCard.profile.age)")
+                    Text("\(profileCard.profile.age) years")
+                        .fontWeight(.medium)
                     Text("•")
-                    Text(profileCard.profile.locationString)
+                    Text("\(profileCard.profile.location.city), \(profileCard.profile.location.country)")
                 }
+                .font(.subheadline)
                 .foregroundColor(.gray)
             }
+            .padding(.horizontal)
             
-            if profileCard.status == .none {
-                HStack(spacing: 20) {
-                    Button(action: onDecline) {
-                        Image(systemName: "xmark")
-                            .font(.title)
-                            .foregroundColor(.white)
-                            .frame(width: 60, height: 60)
-                            .background(Color.red)
-                            .clipShape(Circle())
-                    }
-                    
-                    Button(action: onAccept) {
-                        Image(systemName: "checkmark")
-                            .font(.title)
-                            .foregroundColor(.white)
-                            .frame(width: 60, height: 60)
-                            .background(Color.green)
-                            .clipShape(Circle())
-                    }
+            HStack(spacing: 20) {
+                Button(action: onDecline) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(.white)
+                        .frame(width: 60, height: 60)
+                        .background(Color.red)
+                        .clipShape(Circle())
+                        .shadow(radius: 3)
+                }
+                
+                Button(action: onAccept) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(.white)
+                        .frame(width: 60, height: 60)
+                        .background(Color.green)
+                        .clipShape(Circle())
+                        .shadow(radius: 3)
                 }
             }
+            .padding(.top, 8)
         }
         .padding()
         .background(statusColor)

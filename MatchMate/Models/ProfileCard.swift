@@ -1,21 +1,15 @@
 import SwiftUI
 
-enum MatchStatus {
-    case none
-    case accepted
-    case declined
-}
-
 struct ProfileCard: Identifiable {
     let profile: Profile
-    var status: MatchStatus
+    var status: ProfileStatus
     var offset: CGSize
     
     var id: String { profile.id }
     
     init(profile: Profile) {
         self.profile = profile
-        self.status = .none
+        self.status = .all
         self.offset = .zero
     }
 }

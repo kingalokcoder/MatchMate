@@ -82,15 +82,31 @@ struct Profile: Identifiable, Codable {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        // Handle both direct UUID and nested login container
+        if let loginContainer = try? container.nestedContainer(keyedBy: LoginKeys.self, forKey: .id) {
+            id = try loginContainer.decode(String.self, forKey: .uuid)
+        } else {
+            id = try container.decode(String.self, forKey: .id)
+        }
+        
         name = try container.decode(PersonName.self, forKey: .name)
         location = try container.decode(Location.self, forKey: .location)
         email = try container.decode(String.self, forKey: .email)
         dob = try container.decode(DateOfBirth.self, forKey: .dob)
         picture = try container.decode(Picture.self, forKey: .picture)
         gender = try container.decode(String.self, forKey: .gender)
-        
-        let loginContainer = try container.nestedContainer(keyedBy: LoginKeys.self, forKey: .id)
-        id = try loginContainer.decode(String.self, forKey: .uuid)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(location, forKey: .location)
+        try container.encode(email, forKey: .email)
+        try container.encode(dob, forKey: .dob)
+        try container.encode(picture, forKey: .picture)
+        try container.encode(gender, forKey: .gender)
     }
 }
 

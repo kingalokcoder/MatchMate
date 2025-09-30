@@ -18,25 +18,37 @@ struct ContentView: View {
                     LoadingView()
                 } else if let error = viewModel.error {
                     ErrorView(error: error) {
-                        viewModel.fetchProfiles()
+                        Task {
+                            await viewModel.fetchProfiles()
+                        }
                     }
                 } else {
                     ProfileListView(viewModel: viewModel)
                 }
             }
-            .navigationTitle("Profile Matches")
+            .navigationTitle(Text("Profile Matches"))
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        viewModel.fetchProfiles()
-                    }) {
-                        Image(systemName: "arrow.clockwise")
+                    HStack {
+                        NavigationLink {
+                            ProfileHistoryView(viewModel: viewModel)
+                        } label: {
+                            Image(systemName: "clock.arrow.circlepath")
+                        }
+                        
+                        Button {
+                            Task {
+                                await viewModel.fetchProfiles()
+                            }
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
                     }
                 }
             }
         }
-        .onAppear {
-            viewModel.fetchProfiles()
+        .task {
+            await viewModel.fetchProfiles()
         }
     }
 }

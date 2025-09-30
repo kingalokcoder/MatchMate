@@ -1,46 +1,83 @@
 import SwiftUI
 
+@MainActor
 class ProfileViewModel: ObservableObject {
     @Published var profileCards: [ProfileCard] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var matchedProfiles: [StoredProfile] = []
     
-    func fetchProfiles() {
-        isLoading = true
+    private let storage = ProfileStorageManager.shared
+    
+    init() {
         Task {
-            do {
-                let fetchedProfiles = try await APIService.shared.fetchProfiles()
-                DispatchQueue.main.async {
-                    self.profileCards = fetchedProfiles.map { ProfileCard(profile: $0) }
-                    self.isLoading = false
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    self.error = error
-                    self.isLoading = false
-                }
-            }
+            await loadMatchedProfiles()
+            await fetchProfiles()
         }
     }
     
-    func updateProfile(_ profileCard: ProfileCard, status: MatchStatus) {
+    func fetchProfiles() async {
+        isLoading = true
+        do {
+            let fetchedProfiles = try await APIService.shared.fetchProfiles()
+            // Filter out profiles that are already stored
+            let newProfiles = fetchedProfiles.filter { profile in
+                !storage.isProfileStored(withId: profile.id)
+            }
+            self.profileCards = newProfiles.map { ProfileCard(profile: $0) }
+            self.isLoading = false
+        } catch {
+            self.error = error
+            self.isLoading = false
+        }
+    }
+    
+    func updateProfile(_ profileCard: ProfileCard, status: ProfileStatus) async {
         if let index = profileCards.firstIndex(where: { $0.id == profileCard.id }) {
             var updatedCard = profileCards[index]
             updatedCard.status = status
             profileCards[index] = updatedCard
             
+            // Store the profile with its status
+            storage.saveProfile(profileCard.profile, status: status)
+            await loadMatchedProfiles() // Refresh matched profiles
+            
             // Remove the card after a delay to show the animation
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.profileCards.remove(at: index)
-            }
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+            profileCards.remove(at: index)
         }
     }
     
     func acceptProfile(_ profileCard: ProfileCard) {
-        updateProfile(profileCard, status: .accepted)
+        Task {
+            await updateProfile(profileCard, status: .accepted)
+        }
     }
     
     func declineProfile(_ profileCard: ProfileCard) {
-        updateProfile(profileCard, status: .declined)
+        Task {
+            await updateProfile(profileCard, status: .declined)
+        }
+    }
+    
+    func loadMatchedProfiles() async {
+        matchedProfiles = storage.getMatchedProfiles()
+    }
+    
+    // Debug helper
+    func getStorageSize() -> String {
+        return storage.getStorageFileSize()
+    }
+    
+    // Helper method to get profile count by status
+    func getProfileCount(for status: ProfileStatus) -> Int {
+        switch status {
+        case .all:
+            return matchedProfiles.count
+        case .accepted:
+            return matchedProfiles.filter { $0.status == .accepted }.count
+        case .declined:
+            return matchedProfiles.filter { $0.status == .declined }.count
+        }
     }
 }
