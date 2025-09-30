@@ -5,6 +5,7 @@ enum APIError: Error {
     case noData
     case decodingError
     case networkError(Error)
+    case serverError(Int)
 }
 
 class APIService {
@@ -14,24 +15,35 @@ class APIService {
     private init() {}
     
     func fetchProfiles(count: Int = 10) async throws -> [Profile] {
-        guard let url = URL(string: "\(baseURL)?results=\(count)") else {
+        guard var urlComponents = URLComponents(string: baseURL) else {
             throw APIError.invalidURL
         }
         
-        let (data, _) = try await URLSession.shared.data(from: url)
+        urlComponents.queryItems = [
+            URLQueryItem(name: "results", value: String(count))
+        ]
         
-        // Simulate processing of random user data into our Profile format
-        // In a real app, we would properly decode the actual API response
-        let profiles = try (0..<count).map { index in
-            Profile(
-                id: index,
-                name: "Sample Name \(index)",
-                age: Int.random(in: 21...60),
-                location: "Sample Location",
-                imageURL: "https://picsum.photos/200/300"
-            )
+        guard let url = urlComponents.url else {
+            throw APIError.invalidURL
         }
         
-        return profiles
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.networkError(NSError(domain: "", code: -1))
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.serverError(httpResponse.statusCode)
+        }
+        
+        do {
+            let decoder = JSONDecoder()
+            let apiResponse = try decoder.decode(APIResponse.self, from: data)
+            return apiResponse.results
+        } catch {
+            print("Decoding error: \(error)")
+            throw APIError.decodingError
+        }
     }
 }

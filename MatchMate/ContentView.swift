@@ -9,13 +9,7 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
-    @Environment(\.managedObjectContext) private var viewContext
-    @StateObject private var viewModel: ProfileViewModel
-    
-    init(context: NSManagedObjectContext? = nil) {
-        let context = context ?? PersistenceController.shared.container.viewContext
-        _viewModel = StateObject(wrappedValue: ProfileViewModel(context: context))
-    }
+    @StateObject private var viewModel = ProfileViewModel()
     
     var body: some View {
         NavigationView {

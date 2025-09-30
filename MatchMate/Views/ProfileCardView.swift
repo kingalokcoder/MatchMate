@@ -19,14 +19,14 @@ struct ProfileCardView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             
             VStack(alignment: .leading, spacing: 8) {
-                Text(profile.name)
+                Text(profile.fullName)
                     .font(.title2)
                     .fontWeight(.bold)
                 
                 HStack {
                     Text("\(profile.age)")
                     Text("•")
-                    Text(profile.location)
+                    Text(profile.locationString)
                 }
                 .foregroundColor(.gray)
             }
