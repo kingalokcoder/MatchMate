@@ -24,17 +24,17 @@ struct ContentView: View {
                             viewModel.fetchProfiles()
                         }
                     }
-                } else if viewModel.profiles.isEmpty {
+                } else if viewModel.profileCards.isEmpty {
                     Text("No more profiles")
                         .foregroundColor(.gray)
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 16) {
-                            ForEach(viewModel.profiles) { profile in
+                            ForEach(viewModel.profileCards) { profileCard in
                                 ProfileCardView(
-                                    profile: profile,
-                                    onAccept: { viewModel.acceptProfile(profile) },
-                                    onDecline: { viewModel.declineProfile(profile) }
+                                    profileCard: profileCard,
+                                    onAccept: { viewModel.acceptProfile(profileCard) },
+                                    onDecline: { viewModel.declineProfile(profileCard) }
                                 )
                             }
                         }

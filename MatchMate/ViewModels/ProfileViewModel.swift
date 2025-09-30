@@ -1,7 +1,7 @@
 import SwiftUI
 
 class ProfileViewModel: ObservableObject {
-    @Published var profiles: [Profile] = []
+    @Published var profileCards: [ProfileCard] = []
     @Published var isLoading = false
     @Published var error: Error?
     
@@ -11,7 +11,7 @@ class ProfileViewModel: ObservableObject {
             do {
                 let fetchedProfiles = try await APIService.shared.fetchProfiles()
                 DispatchQueue.main.async {
-                    self.profiles = fetchedProfiles
+                    self.profileCards = fetchedProfiles.map { ProfileCard(profile: $0) }
                     self.isLoading = false
                 }
             } catch {
@@ -23,15 +23,24 @@ class ProfileViewModel: ObservableObject {
         }
     }
     
-    func acceptProfile(_ profile: Profile) {
-        if let index = profiles.firstIndex(where: { $0.id == profile.id }) {
-            profiles.remove(at: index)
+    func updateProfile(_ profileCard: ProfileCard, status: MatchStatus) {
+        if let index = profileCards.firstIndex(where: { $0.id == profileCard.id }) {
+            var updatedCard = profileCards[index]
+            updatedCard.status = status
+            profileCards[index] = updatedCard
+            
+            // Remove the card after a delay to show the animation
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.profileCards.remove(at: index)
+            }
         }
     }
     
-    func declineProfile(_ profile: Profile) {
-        if let index = profiles.firstIndex(where: { $0.id == profile.id }) {
-            profiles.remove(at: index)
-        }
+    func acceptProfile(_ profileCard: ProfileCard) {
+        updateProfile(profileCard, status: .accepted)
+    }
+    
+    func declineProfile(_ profileCard: ProfileCard) {
+        updateProfile(profileCard, status: .declined)
     }
 }
